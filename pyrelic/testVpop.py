@@ -126,8 +126,8 @@ class VpopTests(TestCase):
         r, x = blind(m)
         y,kw,tTilde = eval(w,t,x,msk,s)
         pi = prove(x, tTilde, kw, y)
-        z = deblind(r, y)
-
+        z = deblind(r, y)                    
+        
         # Check the proof
         self.assertTrue( verify(x, t, y, pi) )
 
@@ -186,7 +186,6 @@ def simpleProto(w,t,msk,s,m):
     y,_,_ = eval(w,t,x,msk,s)
     return deblind(r, y)
 
-
-# Run!
+Run!
 if __name__ == '__main__':
     unittest.main()

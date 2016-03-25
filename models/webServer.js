@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 
 var WebServerSchema = new Schema({
     webServerId: String,
-    secret: String    
+    ensemblePrekey: String,
+    ensembleKey: String    
 });
 
 module.exports = mongoose.model('WebServer', WebServerSchema);

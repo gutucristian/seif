@@ -15,7 +15,7 @@ arg3 = sys.argv[4]
 arg4 = sys.argv[5]
 arg5 = sys.argv[6]
 
-def eval(w,t,m,msk,s):
+def eval(w,t,m,msk,s):    
     """
     Pythia server-side computation of intermediate PRF output.
     @w: ensemble key selector (e.g. webserver ID)
@@ -33,19 +33,20 @@ def eval(w,t,m,msk,s):
         
     # Construct the key
     kw = genKw(w,msk,s)    
-    
+        
     # Multiply x by kw (it's fastest this way), hash the tweak, and compute
     # the pairing.   
     tTilde = hashG2(t)    
-    y = pair(x*kw, tTilde)        
-    #return y,kw,tTilde
+    y = pair(x*kw, tTilde)                        
+    print ('y: ' + str(y))        
         
-    z = deblind(r, y);
-        
-    print('z: ' + str(z))
+    z = deblind(r, y);            
     
-    print(str(y) + "\n\n" + str(kw) + "\n\n" + str(tTilde));
+    print ('z: ' + str(z))
+        
     sys.stdout.flush()
+    
+    #return y,kw,tTilde
 
 def prove(x,tTilde,kw,y):
     """

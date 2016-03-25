@@ -6,11 +6,15 @@
 //     console.log('from python script: ' + data);    
 // });
 
-var w = "Some super-secret ensemble key selector";
-var t = "Totally random and unpredictable tweak";
-var m = "This is a secret message";
+// var w = "Some super-secret ensemble key selector";
+// var t = "Totally random and unpredictable tweak";
+// var m = "This is a secret message";
 var msk = "lkjasdf;lkjas;dlkfa;slkdf;laskdjf";
 var s = "Super secret table value";
+
+var w = "Wa_p747NO0Yh4ptIrbWA9vpmgopBgIzc";
+var t = "dF8TaJeEXOgQyxJ9WtS_YcClt8pr8VPS"
+var x = "AiR6SXA9ISufuC8Y31T1MRq6hi2DvyDNCJ2kDKTLaaah";
 
 // 1. Web Server generates 't' (unique user id) 
 // 2. Web Server obtains x (user password)
@@ -28,7 +32,7 @@ var s = "Super secret table value";
 // Pythia responds to server with hardened password Fkw(t,x)  
 
 var spawn = require("child_process").spawn;
-var process = spawn('python',["pyrelic/vpop.py", "eval", w, t, m, msk, s]);
+var process = spawn('python',["pyrelic/vpop.py", "eval", w, t, x, msk, s]);
 
 process.stdout.on('data', function (data) {
     console.log("" + data);    
