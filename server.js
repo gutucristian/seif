@@ -1,11 +1,3 @@
-// spawn pyrelic library
-// var spawn = require("child_process").spawn;
-// var process = spawn('python',["test.py", "add", 2, 3]);
-
-// process.stdout.on('data', function (data) {
-//     console.log('from python script: ' + data);    
-// });
-
 var express = require('express'),
     app = express(),
     bodyParser = require('body-parser'),
@@ -19,32 +11,18 @@ var UserSchema = require('../seif/models/user');
 var WebServer = mongoose.model('WebServer', WebServerSchema);
 var User = mongoose.model('User', UserSchema);
 
-// configure app to use bodyParser()
-// this will let us get the data from POST request
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 var port = process.env.PORT || 8080;
 
-var router = express.Router(); // get instance of express Router
-
-router.use(function (req, res, next) {
-    console.log('Something is happening.');
-    next(); // make sure to go to next routes and don't stop here
-});
-
-router.get('/', function(req, res) {
-    res.json({message: "Hi"});
-});
+var router = express.Router();
 
 router.post('/init', function(req, res) {
-    var w = req.body.webServerId;
-    var t = req.body.userId;
-    var x = req.body.blindedPassword;
     
-    console.log('w: ' + w);
-    console.log('t: ' + t);
-    console.log('x: ' + x);
+    var w = req.body.webServerId; // server id   
+    
+    console.log('Request: create server with id "' + w + '"');    
     
     WebServer.findOne({webServerId: w}, function(err, server){
         if(err){res.send(err);}
@@ -55,122 +33,53 @@ router.post('/init', function(req, res) {
                 
             webServer.save(function(err) {
                 if(err){res.send(err);} 
-            });
-            console.log('created server with id: ' + w);
+            });           
+            
+            console.log('   > created server with id "' + w + '"');
+            res.json({message: 'created server with id "' + w + '"'});
         } else {
-            console.log('server with id ' + w + ' exists')
+            console.log('   > server with id "' + w + '" exists');
+            res.json({message: 'server with id "' + w + '" exists'});
         }
                               
     });          
+        
+});
 
-    UserSchema.findOne({userId: t}, function(err, user){
+router.post('/user', function(req, res){                   
+        
+    var w = req.body.webServerId; // server id
+    var t = req.body.userId; // user id
+    var x = req.body.blindedPassword; // user password
+    
+    console.log('Request: create user with id "' + t + '" for server "' + w + '"');
+    
+    User.findOne({userId: t, webServerId: w}, function(err, user){
+        
         if(err){res.send(err);}
         
         if(user == null){
             var user = new User();
-            user.userId = t;
+            
             user.webServerId = w;
+            user.userId = t;                        
             
             user.save(function(err) {
                 if(err){res.send(err);} 
             }); 
-            console.log('created user with id: ' + t);
-        } else {
-            console.log('user with id ' + t + ' exists')
+            
+            console.log('   > created user with id "' + t + '" for server "' + w + '"');
+            res.json({message: 'created user with id "' + t + '" for server "' + w + '"'});
+        } else {                
+            console.log('   > user with id "' + t + '" in server "' + w + '" exists');  
+            res.json({message: 'user with id "' + t + '" in server "' + w + '" exists'});                        
         }
-    });
-    
-    var servers;
-    var users;
-    
-    res.json({message});
-});
-
-router.get('/eval', function(req, res) {   
-    var w = req.body.webServerId;
-    var t = req.body.userId;
-    var x = req.body.blindedPassword;
-    
-    res.json();
-});
-
-// routes that end in /bears
-router.route('/bears')
-
-    // create bear
-    .post(function(req, res){        
-        var bear = new Bear(); // create new instance of the Bear model
-        bear.name = req.body.name; // set the bears name
         
-        bear.save(function(err){
-            if(err){
-                res.send(err);
-            }else {
-                res.json({message: 'bear ' + bear.name + ' created'});
-            }
-        });             
-    })
+    });  
+      
+});
 
-    // get all the bears
-    .get(function(req, res){
-        Bear.find(function(err, bears){
-        if(err){
-            res.send(err);
-        }else{
-            res.json(bears);
-        }
-        });
-    });
+app.use('/seif', router);
 
-router.route('/bears/:bear_id')
-
-    // get bear with this bear_id
-    .get(function(req, res) {    
-        Bear.findById(req.params.bear_id, function(err, bear) {
-            if (err) {
-                res.send(err);            
-            }else{
-                res.json(bear);
-            }
-        })
-    })
-
-    // update bear name of bear with bear_id
-    .put(function(req, res){
-        Bear.findById(req.params.bear_id, function(err, bear){
-            if (err) {
-                res.send(err);            
-            }else{            
-                bear.name = req.body.name;
-                
-                bear.save(function(err){
-                    if(err){
-                        res.send(err);
-                    }else{
-                        res.json({message: 'bear updated'});
-                    }
-                });
-            }
-        });                
-    })
-
-    .delete(function(req, res){
-        Bear.remove({
-            _id: req.params.bear_id
-        }, function(err, bear){
-            if(err){
-                res.send(err)
-            }else{
-                res.json({message: 'bear successfully deleted'});
-            }
-        });
-    });
-
-// REGISTER OUR ROOTS
-// all of our routes will be prefixed with /api
-app.use('/api', router);
-
-// START SERVER
-// ===============================================================
 app.listen(port);
-console.log('server running on port: ' + port);
+console.log('server running on port ' + port);
