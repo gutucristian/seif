@@ -1,26 +1,18 @@
 var express = require('express'),
     app = express(),
     bodyParser = require('body-parser'),
-    mongoose = require('mongoose');
-    
+    mongoose = require('mongoose'),
+    msk = 'seif master secret key',
+    WebServerSchema = require('../seif/models/webServer'),
+    WebServer = mongoose.model('WebServer', WebServerSchema),
+    spawn = require("child_process").spawn,
+    port = process.env.PORT || 8080,
+    router = express.Router();    
+                
 mongoose.connect('mongodb://naitsirc:samsung@ds019839.mlab.com:19839/ttbear');
-
-var msk = "seif master secret key";
-
-var WebServerSchema = require('../seif/models/webServer');
-var UserSchema = require('../seif/models/user');
-
-var WebServer = mongoose.model('WebServer', WebServerSchema);
-var User = mongoose.model('User', UserSchema);
-
-var spawn = require("child_process").spawn;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
-var port = process.env.PORT || 8080;
-
-var router = express.Router();
 
 function randomStr(){
     var text = '';
@@ -33,11 +25,11 @@ function randomStr(){
     return text;
 }
 
-function createServer(serverId){
+function createServer(id){
     var webServer = new WebServer();            
     
-    webServer.webServerId = serverId; // w
-    webServer.ensemblePrekey = randomStr(); // K[W]                
+    webServer.serverId = id;
+    webServer.ensemblePrekey = randomStr();                
         
     webServer.save(function(err) {
         if(err){res.send(err);} 
@@ -46,11 +38,10 @@ function createServer(serverId){
     return webServer;               
 }
 
-router.post('/init', function(req, res) {       
-    
-    var w = req.body.webServerId; // server id                       
+router.post('/init', function(req, res) {           
+    var w = req.body.serverId;                     
             
-    WebServer.findOne({webServerId: w}, function(err, server){
+    WebServer.findOne({serverId: w}, function(err, server){
         if(server == null){
             createServer(w);        
             console.log('created server (id: ' + w + ')');                              
@@ -63,13 +54,12 @@ router.post('/init', function(req, res) {
         
 });
 
-router.post('/eval', function(req, res) {
+router.post('/eval', function(req, res) {    
+    var w = req.body.serverId;
+    var t = req.body.userId;
+    var x = req.body.blindedPassword;    
     
-    var w = req.body.webServerId; // server id
-    var t = req.body.userId; // user id
-    var x = req.body.blindedPassword; // blinded user password    
-    
-    WebServer.findOne({webServerId: w}, function(err, server){
+    WebServer.findOne({serverId: w}, function(err, server){
        if(server == null){
             console.log('ERROR: no server associated with id \"' + w + '\"')
             res.json({message: 'ERROR: no server associated with id \"' + w + '\"'});

@@ -15,7 +15,7 @@ arg3 = sys.argv[4]
 arg4 = sys.argv[5]
 arg5 = sys.argv[6]
 
-def eval(w,t,m,msk,s):    
+def eval(w,t,m,msk,s):        
     """
     Pythia server-side computation of intermediate PRF output.
     @w: ensemble key selector (e.g. webserver ID)
@@ -28,22 +28,31 @@ def eval(w,t,m,msk,s):
             kw: secret key bound to w (needed for proof)
             tTilde: hashed tweak (needed for proof)
     """   
-    # client will send m already blinded but since I am testing just blind it on server side 
-    r, x = blind(m)        
-        
+    # client will send m already blinded but since I am testing just blind it on server side     
+    r, x = blind(m)                               
+    # since client will send x over the wire it will also be serialized   
+    xSerialized = wrap(x)                                    
+                                      
     # Construct the key
-    kw = genKw(w,msk,s)    
-        
-    # Multiply x by kw (it's fastest this way), hash the tweak, and compute
-    # the pairing.   
-    tTilde = hashG2(t)    
-    y = pair(x*kw, tTilde)                        
-    print ('y: ' + str(y))        
-        
-    z = deblind(r, y);            
+    kw = genKw(w,msk,s)                
     
-    print ('z: ' + str(z))
+    # Multiply x by kw (it's fastest this way), hash the tweak, and compute
+    # the pairing.       
+    tTilde = hashG2(t)    
+    y = pair(x*kw, tTilde)            
+    
+    # server will wrap 
+    
+    # need to unwrap y ?                                       
+    #y = unwrapY(y)          
         
+    z = deblind(r, y);                            
+        
+    # need to wrap z ?            
+    z = wrap(z)
+        
+    print ('z: ' + str(z))
+            
     sys.stdout.flush()
     
     #return y,kw,tTilde

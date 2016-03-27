@@ -44,6 +44,7 @@ def update(z,delta):
 
     
 def wrap(x):
+    print('5')
     """
     Wraps an element or integer type by serializing it and base64 encoding 
     the resulting bytes.

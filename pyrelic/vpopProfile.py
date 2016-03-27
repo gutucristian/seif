@@ -4,18 +4,9 @@ constructed using the BN-256 pairing-based curves provided by the RELIC library.
 Also includes serialization and encoding routines for elements that are commonly
 transmitted.
 """
-import sys
-import base64 
 from pbc import *
 
-functionToCall = sys.argv[1]
-arg1 = sys.argv[2]
-arg2 = sys.argv[3]
-arg3 = sys.argv[4]
-arg4 = sys.argv[5]
-arg5 = sys.argv[6]
-
-def eval(w,t,m,msk,s):    
+def eval(w,t,x,msk,s):
     """
     Pythia server-side computation of intermediate PRF output.
     @w: ensemble key selector (e.g. webserver ID)
@@ -27,22 +18,14 @@ def eval(w,t,m,msk,s):
      where: y: intermediate result
             kw: secret key bound to w (needed for proof)
             tTilde: hashed tweak (needed for proof)
-    """    
-    r, x = blind(m)    
-    print('x b4: ' + str(x)) 
-    xSerialized = _wrap(x);  
-    print('x after: ' + str(xSerialized))
-    
+    """
     kw = genKw(w,msk,s)
-    
+
     # TODO: Return cached values for precomputation
     tTilde = hashG2(t)
     y = pair(x*kw, tTilde)
-    
-    #return y,kw,tTilde
-    
-    print(str(y) + "\n\n" + str(kw) + "\n\n" + str(tTilde));
-    sys.stdout.flush()
+    return y,kw,tTilde
+
 
 def genKw(w,msk,z):
     """
@@ -65,6 +48,7 @@ def prove(x,tTilde,kw,y):
 def verify(x, tTilde, y, pi, errorOnFail=True):
     return verifyGt(x, tTilde, y, pi, errorOnFail)
 
+@profile
 def proveGt(x,tTilde,kw,y):
     """
     Generate a zero-knowledge proof that DL(g^kw) == DL(e(x,t)^kw) where
@@ -87,6 +71,7 @@ def proveGt(x,tTilde,kw,y):
     u = (v- (c*kw)) % orderGt()
     return (p,c,u)
 
+@profile
 def proveG1(x,tTilde,kw,y):
     """
     Generate a zero-knowledge proof that DL(Q*kw) == DL(e(x,tTilde)^kw) where
@@ -108,8 +93,9 @@ def proveG1(x,tTilde,kw,y):
 
     c = hashZ(Q,p,beta,y,t1,t2)
     u = (v-(c*kw)) % orderGt()
-    return (p,c,u)   
+    return (p,c,u)
 
+@profile
 def verifyG1(x, tTilde, y, pi, errorOnFail=True):
     """
     Verifies a zero-knowledge proof where p \in G1.
@@ -145,6 +131,7 @@ def verifyG1(x, tTilde, y, pi, errorOnFail=True):
     else:
         return False
 
+@profile
 def verifyGt(x, tTilde, y, pi, errorOnFail=True):
     """
     Verifies a zero-knowledge proof. 
@@ -198,6 +185,7 @@ def blind(m, hashfunc=hashG1):
 
     return rInv, hashfunc(m) * r
 
+
 def deblind(rInv,y):
     """
     Removes blinding using ephemeral key @r on (intermediate result) @y \in Gt.
@@ -205,6 +193,8 @@ def deblind(rInv,y):
     # Find the multiplicative inverse of @r in Gt.
     return y ** rInv
 
+
+import base64 
 def _wrap(x, serializeFunc, encodeFunc=base64.urlsafe_b64encode, compress=True):
     """
     Wraps an element @x by serializing and then encoding the resulting bytes.
@@ -229,11 +219,7 @@ def _wrapGt(x):
 def _unwrapGt(x):
     return _unwrap(x, deserializeGt)
 
-
 wrapX = _wrapG1
 unwrapX = _unwrapG1
 wrapY = _wrapGt
 unwrapY = _unwrapGt
-
-if (functionToCall == "eval"):    
-    eval(arg1, arg2, arg3, arg4, arg5)

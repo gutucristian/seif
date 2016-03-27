@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var WebServerSchema = new Schema({
-    webServerId: String,
+    serverId: String,
     ensemblePrekey: String,
     ensembleKey: String    
 });
