@@ -29,9 +29,15 @@ def eval(w,t,m,msk,s):
             tTilde: hashed tweak (needed for proof)
     """   
     # client will send m already blinded but since I am testing just blind it on server side     
-    r, x = blind(m)                               
+    r, x = blind(m)
+    print('x b44:' + str(x))                               
     # since client will send x over the wire it will also be serialized   
-    xSerialized = wrap(x)                                    
+    x = wrap(x)
+    print('x b4:' + str(x))
+    print('xAfter: ' + str(unwrapX(x)))                                    
+     
+     
+    print('x: ' + str(xSerialized)) 
                                       
     # Construct the key
     kw = genKw(w,msk,s)                

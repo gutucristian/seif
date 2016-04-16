@@ -1,15 +1,12 @@
 var express = require('express'),
     app = express(),
-    bodyParser = require('body-parser'),
-    mongoose = require('mongoose'),
-    msk = 'seif master secret key',
-    WebServerSchema = require('../seif/models/webServer'),
-    WebServer = mongoose.model('WebServer', WebServerSchema),
+    bodyParser = require('body-parser'),    
+    msk = 'seif master secret key',  
+    MongoClient = require('mongodb').MongoClient,  
+    url = 'mongodb://localhost:27017/seif';    
     spawn = require("child_process").spawn,
     port = process.env.PORT || 8080,
-    router = express.Router();    
-                
-mongoose.connect('mongodb://naitsirc:samsung@ds019839.mlab.com:19839/ttbear');
+    assert = require('assert');        
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -25,99 +22,58 @@ function randomStr(){
     return text;
 }
 
-function createServer(id){
-    var webServer = new WebServer();            
+MongoClient.connect(url, function(err, db){    
+    assert.equal(err, null);
+    console.log('connected to mongodb')        
     
-    webServer.serverId = id;
-    webServer.ensemblePrekey = randomStr();                
+    app.post('/init', function(req, res){
         
-    webServer.save(function(err) {
-        if(err){res.send(err);} 
-    });   
-    
-    return webServer;               
-}
+        var clientId = req.body.serverId;
+        console.log('clientId: ' + clientId)
+        
+        // find client in db
+        db.collection('clients').findOne({'clientId': clientId}, function(err, client){
 
-router.post('/init', function(req, res) {           
-    var w = req.body.serverId;                     
+            // if client does not exist in db create one else throw error
+            if(client){
             
-    WebServer.findOne({serverId: w}, function(err, server){
-        if(server == null){
-            createServer(w);        
-            console.log('created server (id: ' + w + ')');                              
-            res.json({message: 'created server (id: ' + w + ')'});                             
-        } else {
-            console.log('ERROR: server exists (id: ' + w + ')');
-            res.json({message: 'ERROR: server exists (id: ' + w + ')'});
-        }     
-    });        
-        
-});
-
-router.post('/eval', function(req, res) {    
-    var w = req.body.serverId;
-    var t = req.body.userId;
-    var x = req.body.blindedPassword;    
-    
-    WebServer.findOne({serverId: w}, function(err, server){
-       if(server == null){
-            console.log('ERROR: no server associated with id \"' + w + '\"')
-            res.json({message: 'ERROR: no server associated with id \"' + w + '\"'});
-       } else {            
-            var process = spawn('python',["pyrelic/vpop.py", "eval", w, t, x, msk, server.ensemblePrekey]);           
-           
-            process.stdout.on('data', function (data) {
-                console.log('' + data);
-                res.json({message: '' + data});    
-            });                          
-       }
+                res.json({'message': 'server already initiated'});
+                
+            }else{
+                
+                var ensemblePrekey = randomStr();
+            
+                var process = spawn('python',["pyrelic/prf.py", "genKw", clientId, msk, ensemblePrekey]);        
+                
+                process.stdout.on('data', function (data) {            
+                    // NOTE: I save ensembleKey as a string not a BigInt  
+                    ensembleKey = data + '';
+                    
+                    console.log('ensemblePrekey: ' + ensemblePrekey);
+                    console.log('ensembleKey: ' + ensembleKey);
+                    
+                    db.collection('clients').insertOne({'clientId': clientId, 'ensemblePrekey': ensemblePrekey, 'ensembleKey': ensembleKey});
+                    
+                    res.json({'message': 'ok'});                          
+                });
+                                  
+            }
+                        
+        });
+                                                                                
     });
-});
-
-app.use('/seif', router);
-
-app.listen(port);
-console.log('server running on port ' + port);
-
-// function createUser(userId, serverId, password) {
-//     var user = new User();
-            
-//     user.userId = userId;
-//     user.webServerId = serverId;                            
-    
-//     user.save(function(err) {
-//         if(err){res.send(err);} 
-//     });
-    
-//     return user;
-// }
-
-// router.post('/user', function(req, res){                   
         
-//     var w = req.body.webServerId; // server id
-//     var t = req.body.userId; // user id
-//     var x = req.body.blindedPassword; // user password        
+    app.post('/eval', function(req, res){
+        
+    });
     
-//     WebServer.findOne({webServerId: w}, function(err, server){
-        
-//         if(server == null){
-//             console.log('ERROR: no server associated with id \"' + w + '\"')
-//             res.json({message: 'ERROR: no server associated with id \"' + w + '\"'});    
-//         } else {
-            
-//             User.findOne({userId: t, webServerId: w}, function(err, user){
-//                 if(user == null){
-//                     createUser(t, w, x);
-//                     console.log('created user (id: ' + t + ') in server \"' + w + '\"');
-//                     res.json({message: 'created user (id: ' + t + ') in server \"' + w + '\"'});                    
-//                 } else {
-//                     console.log('ERROR: user exists (id:' + t + ') in server \"' + w + '\"');
-//                     res.json({message: 'ERROR: user exists (id:' + t + ') in server \"' + w + '\"'});
-//                 }
-//             });     
-                                 
-//         }
-        
-//     }); 
-      
-// });
+    app.listen(port);
+    console.log('server running on port ' + port);
+})
+
+// var process = spawn('python',["pyrelic/vpop.py", "eval", w, t, x, msk, server.ensemblePrekey]);           
+           
+// process.stdout.on('data', function (data) {
+//     console.log('' + data);
+//     res.json({message: '' + data});    
+// });  

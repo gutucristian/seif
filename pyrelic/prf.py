@@ -2,10 +2,16 @@
 Common routines for Pythia pseudorandom function (PRF) protocols based on 
 pairing based curves (BN-254).
 """
+import sys
 from pbc import *
 import base64
 
-def genKw(w,msk,z):
+functionToCall = sys.argv[1]
+arg1 = sys.argv[2]
+arg2 = sys.argv[3]
+arg3 = sys.argv[4]
+
+def genKw(w,msk,z):    
     """
     Generates key Kw using key-selector @w, master secret key @msk, and
     table value @z.
@@ -16,6 +22,10 @@ def genKw(w,msk,z):
 
     # Convert the string into a long value (no larger than the order of Gt),
     # then return a BigInt value.
+        
+    print(BigInt(longFromString(b) % long(orderGt())))
+    sys.stdout.flush()
+    
     return BigInt(longFromString(b) % long(orderGt()))
 
 
@@ -43,8 +53,7 @@ def update(z,delta):
     return z**delta
 
     
-def wrap(x):
-    print('5')
+def wrap(x):    
     """
     Wraps an element or integer type by serializing it and base64 encoding 
     the resulting bytes.
@@ -94,3 +103,5 @@ def _unwrap(x, deserializeFunc, decodeFunc=base64.urlsafe_b64decode, compress=Tr
     """
     return deserializeFunc(decodeFunc(str(x)), compress)
 
+if (functionToCall == "genKw"):
+    genKw(arg1, arg2, arg3)
