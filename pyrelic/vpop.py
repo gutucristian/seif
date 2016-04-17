@@ -15,7 +15,7 @@ arg3 = sys.argv[4]
 arg4 = sys.argv[5]
 arg5 = sys.argv[6]
 
-def eval(w,t,m,msk,s):        
+def eval(w,t,x,msk,s):        
     """
     Pythia server-side computation of intermediate PRF output.
     @w: ensemble key selector (e.g. webserver ID)
@@ -27,17 +27,20 @@ def eval(w,t,m,msk,s):
      where: y: intermediate result
             kw: secret key bound to w (needed for proof)
             tTilde: hashed tweak (needed for proof)
-    """   
-    # client will send m already blinded but since I am testing just blind it on server side     
-    r, x = blind(m)
-    print('x b44:' + str(x))                               
-    # since client will send x over the wire it will also be serialized   
-    x = wrap(x)
-    print('x b4:' + str(x))
-    print('xAfter: ' + str(unwrapX(x)))                                    
+    """
+       
+    # # client will send m already blinded but since I am testing just blind it on server side     
+    # r, x = blind(m)
+    # print('x b44:' + str(x))                               
+    # # since client will send x over the wire it will also be serialized   
+    # x = wrap(x)
+    # print('x b4:' + str(x))
+    # print('xAfter: ' + str(unwrapX(x)))                                    
      
      
-    print('x: ' + str(xSerialized)) 
+    # print('x: ' + str(xSerialized)) 
+    
+    x = unwrapX(x)
                                       
     # Construct the key
     kw = genKw(w,msk,s)                
@@ -47,19 +50,19 @@ def eval(w,t,m,msk,s):
     tTilde = hashG2(t)    
     y = pair(x*kw, tTilde)            
     
-    # server will wrap 
+    # server will wrap y 
+    y = wrap(y)    
+    
+    print(y)
+    sys.stdout.flush()
     
     # need to unwrap y ?                                       
     #y = unwrapY(y)          
         
-    z = deblind(r, y);                            
+    # z = deblind(r, y);                            
         
     # need to wrap z ?            
-    z = wrap(z)
-        
-    print ('z: ' + str(z))
-            
-    sys.stdout.flush()
+    # z = wrap(z)    
     
     #return y,kw,tTilde
 

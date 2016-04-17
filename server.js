@@ -42,21 +42,12 @@ MongoClient.connect(url, function(err, db){
             }else{
                 
                 var ensemblePrekey = randomStr();
-            
-                var process = spawn('python',["pyrelic/prf.py", "genKw", clientId, msk, ensemblePrekey]);        
+                        
+                console.log('ensemblePrekey: ' + ensemblePrekey);
+                db.collection('clients').insertOne({'clientId': clientId, 'ensemblePrekey': ensemblePrekey});
                 
-                process.stdout.on('data', function (data) {            
-                    // NOTE: I save ensembleKey as a string not a BigInt  
-                    ensembleKey = data + '';
-                    
-                    console.log('ensemblePrekey: ' + ensemblePrekey);
-                    console.log('ensembleKey: ' + ensembleKey);
-                    
-                    db.collection('clients').insertOne({'clientId': clientId, 'ensemblePrekey': ensemblePrekey, 'ensembleKey': ensembleKey});
-                    
-                    res.json({'message': 'ok'});                          
-                });
-                                  
+                res.json({'message': 'server initiated'});
+
             }
                         
         });
@@ -64,7 +55,37 @@ MongoClient.connect(url, function(err, db){
     });
         
     app.post('/eval', function(req, res){
+        var clientId = req.body.serverId;
+        var username = req.body.username;
+        var blindedPassword = req.body.blindedPassword;
         
+        console.log('clientId: ' + clientId);
+        console.log('username: ' + username);
+        console.log('blindedPassword: ' + blindedPassword);
+        
+        db.collection('clients').findOne({'clientId': clientId}, function (err, client) {
+            
+            if(client){
+                
+                console.log('client found in db');
+                console.log('client ensemblePrekey: ' + client.ensemblePrekey);
+            
+                var process = spawn('python',["pyrelic/vpop.py", "eval", clientId, username, blindedPassword, msk, client.ensemblePrekey]);
+                         
+                process.stdout.on('data', function (data) {
+                    var hardenedPas = data + '';
+                    console.log('y: ' + hardenedPas);                    
+                    res.json({'y': hardenedPas})                                       
+                }); 
+                
+            }else{
+                
+                res.json({'message': 'invalid serverId'});
+                
+            }
+                                                            
+        });                
+                
     });
     
     app.listen(port);
