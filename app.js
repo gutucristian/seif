@@ -6,11 +6,11 @@
 //     console.log('from python script: ' + data);    
 // });
 
-var w = "Some super-secret ensemble key selector";
-var t = "Totally random and unpredictable tweak";
-var x = "asdasd";
-var msk = "lkjasdf;lkjas;dlkfa;slkdf;laskdjf";
-var s = "Super secret table value";
+var w = "SeifPass";
+var t = "bb";
+var x = "bb";
+var msk = "seif master secret key";
+var s = "HJiRt";
 
 // 1. Web Server generates 't' (unique user id) 
 // 2. Web Server obtains x (user password)

@@ -73,9 +73,13 @@ MongoClient.connect(url, function(err, db){
                 var process = spawn('python',["pyrelic/vpop.py", "eval", clientId, username, blindedPassword, msk, client.ensemblePrekey]);
                          
                 process.stdout.on('data', function (data) {
-                    var hardenedPas = data + '';
-                    console.log('y: ' + hardenedPas);                    
-                    res.json({'y': hardenedPas})                                       
+                    //data = data + '';
+                    //console.log(data);
+                    //var i = data.indexOf('|');
+                    //var hardenedPas = data.substring(i+1) + '';
+                    console.log('y: ' + data)
+                    var y = data + '';                
+                    res.json({'y': y})                                       
                 }); 
                 
             }else{

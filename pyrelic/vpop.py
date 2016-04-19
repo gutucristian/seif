@@ -27,44 +27,73 @@ def eval(w,t,x,msk,s):
      where: y: intermediate result
             kw: secret key bound to w (needed for proof)
             tTilde: hashed tweak (needed for proof)
-    """
-       
-    # # client will send m already blinded but since I am testing just blind it on server side     
-    # r, x = blind(m)
-    # print('x b44:' + str(x))                               
-    # # since client will send x over the wire it will also be serialized   
-    # x = wrap(x)
-    # print('x b4:' + str(x))
-    # print('xAfter: ' + str(unwrapX(x)))                                    
-     
-     
-    # print('x: ' + str(xSerialized)) 
-    
-    x = unwrapX(x)
+    """                                      
+    x = unwrapX(x)    
                                       
     # Construct the key
-    kw = genKw(w,msk,s)                
+    kw = genKw(w,msk,s)                    
     
     # Multiply x by kw (it's fastest this way), hash the tweak, and compute
     # the pairing.       
-    tTilde = hashG2(t)    
-    y = pair(x*kw, tTilde)            
+    tTilde = hashG2(t)        
+    y = pair(x*kw, tTilde)                
+         
+    y = wrap(y)        
     
-    # server will wrap y 
-    y = wrap(y)    
-    
-    print(y)
+    print(str(y))
     sys.stdout.flush()
+
+# def eval(w,t,m,msk,s):        
+#     """
+#     Pythia server-side computation of intermediate PRF output.
+#     @w: ensemble key selector (e.g. webserver ID)
+#     @t: tweak (e.g. user ID)
+#     @x: blinded message (element of G1)
+#     @msk: Pythia server's master secret key
+#     @s: state value from Pythia server's key table
+#     @returns: (y, kw, tTile)
+#      where: y: intermediate result
+#             kw: secret key bound to w (needed for proof)
+#             tTilde: hashed tweak (needed for proof)
+#     """
+#     print('w: ' + w)
+#     print('t: ' + t)
+#     print('m: ' + m)
+#     print('msk: ' + msk)
+#     print('s: ' + s)
     
-    # need to unwrap y ?                                       
-    #y = unwrapY(y)          
-        
-    # z = deblind(r, y);                            
-        
-    # need to wrap z ?            
-    # z = wrap(z)    
+#     r, x = blind(m)   
+#     print('rInv: ' + str(r.__long__()))             
+#     x = wrap(x)
+#     print('\nwrapX: ' + str(x))                                                  
+#     x = unwrapX(x)
+#     print('\nunwrapX: ' + str(x))
+                                                 
+#     # Construct the key
+#     kw = genKw(w,msk,s)                
+#     print('\nkw: ' + str(kw))
     
-    #return y,kw,tTilde
+#     # Multiply x by kw (it's fastest this way), hash the tweak, and compute
+#     # the pairing.       
+#     tTilde = hashG2(t)
+#     print('\ntTilde: ' + str(tTilde))    
+#     y = pair(x*kw, tTilde)
+#     print('y: ' + str(y))                        
+    
+#     # server will wrap y 
+#     y = wrap(y)        
+#     print('\ny wrapped: ' + str(y))
+    
+#     y = unwrapY(y)
+#     print('\ny unwrapped: ' + str(y))
+    
+#     z = deblind(r.__long__(), y)        
+#     print('\nz: ' + str(z))
+    
+#     z = wrap(z)
+#     print('\nz wrapped: ' + str(z))
+        
+#     sys.stdout.flush()
 
 def prove(x,tTilde,kw,y):
     """
@@ -138,12 +167,13 @@ def blind(m, hashfunc=hashG1):
     that can be used to deblind. Computes: x = H(x)^r
     @returns (1/r,x)
     """
+    
     # Find r with a suitable inverse in Gt
     rInv = None
     while not rInv:
         r = randomZ()
         rInv = inverse(r, orderGt())
-
+                
     return rInv, hashfunc(m) * r
 
 
