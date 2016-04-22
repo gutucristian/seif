@@ -39,8 +39,8 @@ def eval(w,t,x,msk,s):
     y = pair(x*kw, tTilde)                
          
     y = wrap(y)        
-    
-    print(str(y))
+        
+    print(str(kw.__long__()) + " " + str(y))
     sys.stdout.flush()
 
 # def eval(w,t,m,msk,s):        

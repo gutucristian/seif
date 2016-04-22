@@ -72,14 +72,16 @@ MongoClient.connect(url, function(err, db){
             
                 var process = spawn('python',["pyrelic/vpop.py", "eval", clientId, username, blindedPassword, msk, client.ensemblePrekey]);
                          
-                process.stdout.on('data', function (data) {
-                    //data = data + '';
-                    //console.log(data);
-                    //var i = data.indexOf('|');
-                    //var hardenedPas = data.substring(i+1) + '';
-                    console.log('y: ' + data)
-                    var y = data + '';                
-                    res.json({'y': y})                                       
+                process.stdout.on('data', function (data) {                    
+                    var strData = data + "";
+                    var strDataParsed = strData.split(" ");
+                    var ensembleKey = strDataParsed[0];
+                    var hardenedPas = strDataParsed[1];
+                    
+                    console.log('ensembleKey: ' + ensembleKey);
+                    console.log('\ny: ' + hardenedPas)
+                    //var y = data + '';                
+                    res.json({'y': hardenedPas})                                       
                 }); 
                 
             }else{
@@ -90,6 +92,14 @@ MongoClient.connect(url, function(err, db){
                                                             
         });                
                 
+    });
+    
+    app.post('/update', function(req, res){
+        var clientId = req.body.serverId;
+        
+        db.collection('clients').findOne({'clientId': clientId}).toArray(function(err, docs){
+            var ensemblePrekey            
+        });
     });
     
     app.listen(port);
