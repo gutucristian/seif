@@ -59,16 +59,15 @@ MongoClient.connect(url, function(err, db){
         var username = req.body.username;
         var blindedPassword = req.body.blindedPassword;
         
-        console.log('clientId: ' + clientId);
-        console.log('username: ' + username);
-        console.log('blindedPassword: ' + blindedPassword);
+        console.log('clientId (w): ' + clientId);
+        console.log('username (t): ' + username);
+        console.log('blindedPassword (x): ' + blindedPassword);
         
         db.collection('clients').findOne({'clientId': clientId}, function (err, client) {
             
             if(client){
-                
-                console.log('client found in db');
-                console.log('client ensemblePrekey: ' + client.ensemblePrekey);
+                                
+                console.log('client ensemblePrekey (k): ' + client.ensemblePrekey);
             
                 var process = spawn('python',["pyrelic/vpop.py", "eval", clientId, username, blindedPassword, msk, client.ensemblePrekey]);
                          
